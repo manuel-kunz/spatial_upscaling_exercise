@@ -1,0 +1,40 @@
+---
+title: "Spatial upscaling Exercise - Final Report"
+author: "Manuel Kunz"
+date: "2024-01-02"
+bibliography: "references.bib"
+output: html_document
+---
+
+## 1 Literature
+
+@Ludwig2023
+
+## 2 Random cross-validation
+### Used model
+
+### Results 
+Root mean square error (RSME) and $R^2$ across cross-validation folds
+```{r, echo= FALSE, results = 'asis', message=FALSE, warning=FALSE}
+library(knitr)
+results_foldwise <- readRDS(paste0(here::here(),"./data/results_foldwise.rds"))
+
+kable(results_foldwise, caption = "Table 1: RSME and $R^2$ across cross-validation folds")
+```
+Model evaluation
+```{r, model evaluation, message=FALSE, warning=FALSE, echo=FALSE}
+plot_random_cv <- readRDS(paste0(here::here(),"./data/plots_cv_results.rds"))
+plot_random_cv
+```
+
+
+## 3 Spatial cross-validation
+
+## 4 Environmental cross-validation
+
+
+
+
+
+
+## 5 References
