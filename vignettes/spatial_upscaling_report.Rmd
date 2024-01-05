@@ -30,6 +30,34 @@ plot_random_cv
 
 ## 3 Spatial cross-validation
 
+### 3.1 Observations regarding the locations of the data points
+
+
+```{r, map data points, echo=FALSE, message=FALSE, warning=FALSE}
+map_datapoints <- readRDS(paste0(here::here(),"./data/map_datapoints.rds"))
+map_datapoints
+```
+
+```{r, map data points clustered, echo=FALSE, message=FALSE, warning=FALSE}
+map_datapoints_clustered <- readRDS(paste0(here::here(),"./data/map_datapoints_clustered.rds"))
+map_datapoints_clustered
+```
+
+
+
+### 3.2 Performing a spatial cross-validation
+
+
+### 3.3 Distribution of leaf N by cluster
+
+
+
+### 3.4 RSME and $R^2$ results
+
+
+
+### 3.5 Comparison random and spatial cross validation
+
 ## 4 Environmental cross-validation
 
 
