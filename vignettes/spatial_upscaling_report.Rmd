@@ -4,6 +4,7 @@ author: "Manuel Kunz"
 date: "2024-01-02"
 bibliography: "references.bib"
 output: html_document
+codefolding: hide
 ---
 
 ## 1 Literature
@@ -33,23 +34,46 @@ plot_random_cv
 ### 3.1 Observations regarding the locations of the data points
 
 
-```{r, map data points, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, map data points, echo=FALSE, message=FALSE, warning=FALSE, fig.cap= "Figure 2: Map showing the spatial distribution of the original data points (red)"}
 map_datapoints <- readRDS(paste0(here::here(),"./data/map_datapoints.rds"))
 map_datapoints
 ```
 
-```{r, map data points clustered, echo=FALSE, message=FALSE, warning=FALSE}
-map_datapoints_clustered <- readRDS(paste0(here::here(),"./data/map_datapoints_clustered.rds"))
-map_datapoints_clustered
-```
+
 
 
 
 ### 3.2 Performing a spatial cross-validation
+To perform a spatial cross-validation, I divided the data points used in Chapter 3.1 into 5 groups based on their location (lat and lon coordinates). This was done using the kmeans function from the R {stats} package.
 
+```{r, code kmeans, message=FALSE, warning=FALSE}
+# load prepared data
+dfs <- readRDS(here::here("./data/dfs.rds"))
+
+# cluster the data
+clusters <- kmeans(
+  dfs[,2:3],    # column 2 contains lon and column contains lat data
+  centers = 5   # 5 clusters should be created
+)
+
+# add the create clusters to the original data frame
+dfs$cluster <- clusters$cluster
+```
+
+```{r, map data points clustered, echo=FALSE, message=FALSE, warning=FALSE, fig.cap= "Figure 3: Map showing the original data points (red) and their classification to the 5 created clusters (see legend)"}
+     
+map_datapoints_clustered <- readRDS(paste0(here::here(),"./data/map_datapoints_clustered.rds"))
+map_datapoints_clustered
+      
+```
 
 ### 3.3 Distribution of leaf N by cluster
+Figure 4 shows the distribution of leaf N by cluster using density plots. The x and y axes are fixed to the same ranges, so that the five plots can be compared.
 
+```{r, density plots, echo = FALSE, message=FALSE, warning=FALSE, fig.cap = "Figure 4: Leaf N density plots for every cluster"}
+density_plots <- readRDS(paste0(here::here(),"./data/density_plots.rds"))
+density_plots
+```
 
 
 ### 3.4 RSME and $R^2$ results

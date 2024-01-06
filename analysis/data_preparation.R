@@ -1,7 +1,6 @@
 library(tidyverse)
-library(viridis)
-library(paletteer)
-library(leaflet)
+library(readr)
+
 
 # read data from github
 df <- readr::read_csv("https://raw.githubusercontent.com/stineb/leafnp_data/main/data/leafnp_tian_et_al.csv")

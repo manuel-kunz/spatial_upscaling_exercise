@@ -72,6 +72,8 @@ mod <- train(
 
 print(mod)
 
+mod$metric
+
 # get the results per cross-validation fold
 results_foldwise <-mod$resample
 
@@ -85,6 +87,9 @@ results_foldwise$MAE <- NULL
 results_foldwise <- results_foldwise[, c("Resample", "RMSE", "Rsquared")]
 saveRDS(results_foldwise, (paste0(here::here(),"./data/results_foldwise.rds")))
 
+prediction <- predict(mod, newdata = dfs_test)
+
+dfs_test$prediction <- prediction
 
 
 # import the eval_model function from chapter 9 of AGSI I
