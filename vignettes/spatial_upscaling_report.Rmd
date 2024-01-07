@@ -8,22 +8,62 @@ codefolding: hide
 ---
 
 ## 1 Literature
+### 1.1 Difference between a random and spatial cross-validation
+First, to answer this question, it makes sense to look the following defintion of "cross-validation" from @boehmke2020: "k-fold cross-validation (aka k-fold CV) is a resampling method that randomly divides the training data into k groups (aka folds) of approximately equal size" (Boehmke & Greenwell, 2020: 23). As shown with this quote, to perform a cross-validation, the training data is split into a defined number of folds Now, there are multiple ways to perform such a split. In a random cross-validation, the data is split randomly into folds. In contrast, a spatial cross-validation takes the geographical location of the data into account and splits the data into folds based on their location.
 
-@Ludwig2023
+### 1.2 Alternative to geographical distance
+In this exercise, we are trying to predict the Nitrogen leaf content. I can imagine that the Nitrogen content of a leaf is influenced by climate. If we think of the "classical climate zones", they strongly differ from North to South, but only little from West to East. But if we calculate the geographical distance in Euclidian space, it does not matter if the distance is mainly zonal or mainly meridional. Simply speaking, if two points are located on the equator 10'000 kilometers apart, the geographical distance (10'000 km) would be the same as for it one of the points would be located close to the North Pole. Therefore I think it would be interesting to include only the latitudinal distances because we can expect a similar climate.
+
+
 
 ## 2 Random cross-validation
 ### Used model
+Before implementing the Random Forest model, the data was download and prepared in "data_preparation.R" according to the exercise description. After the data was prepared, I used the random forest model formulation from Chapter 11 of AGDS I. The following code shows the used model created with the {recipes} and {caret} packages. The predictors as well as the hyperparameters were defined in the exercise description.
+```{r, model formulation, echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyr)
+library(recipes)
+library(caret)
+
+# load data
+dfs <- readRDS(here::here("./data/dfs.rds"))
+dfs_test <- readRDS(here::here("./data/dfs_test.rds"))
+dfs_train <- readRDS(here::here("./data/dfs_train.rds"))
+
+# Model formulation (from Chapter 11 of AGDS I)
+pp <- recipes::recipe(leafN ~elv + mat + map + ndep + mai + Species,
+                      data = dfs_train) |>
+  recipes::step_center(recipes::all_numeric(), -recipes::all_outcomes()) |>
+  recipes::step_scale(recipes::all_numeric(), -recipes::all_outcomes())
+
+mod <- train(
+  pp,
+  data = dfs_train %>%
+    drop_na(),
+  method = "ranger",
+  trControl = trainControl(method = "cv", number = 5, savePredictions = "final"),
+  tuneGrid = expand.grid( .mtry = 3,
+                          .min.node.size = 12,
+                          .splitrule = "variance"),
+  metric = "RMSE",
+  replace = FALSE,
+  sample.fraction = 0.5,
+  num.trees = 100,
+  seed = 0
+)
+```
+
+
 
 ### Results 
-Root mean square error (RSME) and $R^2$ across cross-validation folds
+Table 1 containd the root mean square error (RSME) and R-squared results across cross-validation folds. I used the function to evaluate the results (see "eval_model.R") from Chapter 9 of AGDS I (Figure 1).
 ```{r, echo= FALSE, results = 'asis', message=FALSE, warning=FALSE}
 library(knitr)
 results_foldwise <- readRDS(paste0(here::here(),"./data/results_foldwise.rds"))
 
-kable(results_foldwise, caption = "Table 1: RSME and $R^2$ across random cross-validation folds")
+kable(results_foldwise, caption = "Table 1: RSME and R-squared across random cross-validation folds")
 ```
-Model evaluation
-```{r, model evaluation, message=FALSE, warning=FALSE, echo=FALSE}
+
+```{r, model evaluation, message=FALSE, warning=FALSE, echo=FALSE, fig.cap="Figure 1: Evaluation of the random forest model on the training and test data"}
 plot_random_cv <- readRDS(paste0(here::here(),"./data/plots_cv_results.rds"))
 plot_random_cv
 ```
@@ -32,8 +72,7 @@ plot_random_cv
 ## 3 Spatial cross-validation
 
 ### 3.1 Observations regarding the locations of the data points
-
-
+Figure 2 shows the spatial distribution of the data points. It is clearly visible, that Europe is the region with the highest data point density, while there is only 1 data point on the African continent. For spatial upscaling, this is challenging because we can only assume that the relationship between predictors and the target variable in areas without data points is similar to the areas where data is available. 
 ```{r, map data points, echo=FALSE, message=FALSE, warning=FALSE, fig.cap= "Figure 2: Map showing the spatial distribution of the original data points (red)"}
 map_datapoints <- readRDS(paste0(here::here(),"./data/map_datapoints.rds"))
 map_datapoints
