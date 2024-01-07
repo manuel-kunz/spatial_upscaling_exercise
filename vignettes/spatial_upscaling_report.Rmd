@@ -20,7 +20,7 @@ Root mean square error (RSME) and $R^2$ across cross-validation folds
 library(knitr)
 results_foldwise <- readRDS(paste0(here::here(),"./data/results_foldwise.rds"))
 
-kable(results_foldwise, caption = "Table 1: RSME and $R^2$ across cross-validation folds")
+kable(results_foldwise, caption = "Table 1: RSME and $R^2$ across random cross-validation folds")
 ```
 Model evaluation
 ```{r, model evaluation, message=FALSE, warning=FALSE, echo=FALSE}
@@ -77,12 +77,104 @@ density_plots
 
 
 ### 3.4 RSME and $R^2$ results
+Now, I used the geographical clusters generated with the kmeans function in Chapter 3.2 to split the data into five folds. This was done using the following code provides in the exercise description
+
+```{r, fold creation, message=FALSE, warning=FALSE}
+library(dplyr)
+# Train folds
+group_folds_train <- purrr::map(
+  seq(length(unique(dfs$cluster))),
+  ~ {
+    dfs |>
+      select(cluster) |>
+      mutate(idx = 1:n()) |>
+      filter(cluster != .) |>
+      pull(idx)
+  }
+)
+
+# Test folds
+group_folds_test <- purrr::map(
+  seq(length(unique(dfs$cluster))),
+  ~ {
+    dfs |>
+      select(cluster) |>
+      mutate(idx = 1:n()) |>
+      filter(cluster == .) |>
+      pull(idx)
+  }
+)
+```
+
+Here, we can compare the number of rows I selected in each fold with the number of data points per cluster to check, if the folds were actually created according to the clusters.
+```{r, compare folds and clusters, echo=FALSE, message=FALSE, warning=FALSE}
+datapoints_per_cluster <- table(dfs$cluster)
+df_count <- as.data.frame(datapoints_per_cluster)
+colnames(df_count) <- c("Cluster", "Number of data points")
+
+
+group_folds_test_count <- lengths(group_folds_test)
+df_count$"Number of data points test fold" <- group_folds_test_count
+
+kable(df_count, caption = "Table 2: Number of data points per cluster in the original data and in the test fold")
+```
+After the creation of the folds, I used the following function to create and fit a random forest model. Here, I used the same hyperparameters as in the random cross-validation (Chapter 2). The function was used 5 times to calculate the RSME and R-squared results of the 5 different folds.
+```{r, train test fold function , echo=FALSE, message=FALSE, warning=FALSE}
+# create a function that trains a random forest model on a given set of rows and
+# predicts on a disjunct set of rows
+train_test_by_fold <- function(dfs, idx_train, idx_val){
+
+  set.seed(1)   # for reproducibility
+
+  target_vector <-dfs$leafN  # a vector of the target values
+
+  mod <- ranger::ranger(
+    x =  dfs[idx_train, 4:9],       # data frame with columns corresponding to predictors
+    y =  target_vector[idx_train],  # a vector of the target values (not a data frame!)
+    mtry = 3,                       # use the same hyperparameters as for random cv
+    min.node.size = 12,
+    splitrule = "variance",
+    num.trees = 100,
+    replace = FALSE,
+    sample.fraction = 0.5,
+    seed = 1
+  )
+  print(mod)
+
+  pred <- predict(mod,       # the fitted model object
+                  data = dfs[idx_val, 4:9] # a data frame with columns corresponding to predictors
+  )
+
+  results <- dfs[idx_val,]
+  results$pred <- pred$predictions
+  rmse <- yardstick::rmse(results, "leafN", "pred") # the root mean square error on the validation set
+  rsq <- yardstick::rsq(results, "leafN", "pred")   # the R-squared determined on the validation set
+
+  return(tibble(rsq = rsq, rmse = rmse))
+}
+```
+Ultimately, the following results were calculated (Table 3):
+```{r, results spatial cv, echo=FALSE, message=FALSE, warning=FALSE}
+results_spatial_cv <- readRDS(paste0(here::here("./data/results_spatial_cv.rds")))
+
+kable(results_spatial_cv, caption = "Table 3: RSME and $R^2$ across spatial cross-validation folds")
+```
 
 
 
 ### 3.5 Comparison random and spatial cross validation
+Table 4 shows the results from the random and the spatial cross-validation
+
+
+```{r, random and spatial cv, echo=FALSE, message=FALSE, warning=FALSE}
+combined_results <- cbind(results_foldwise, results_spatial_cv)
+colnames(combined_results) <- c("Resample random cv", "RMSE random cv", "Rsquared random cv", "Test fold spatial cv", "RMSE spatial cv", "Rsquared spatial cv")
+
+kable(combined_results, caption = "Table 4: Comparison of RSME and $R^2$ results across random and spatial cross-validation folds")
+```
 
 ## 4 Environmental cross-validation
+Here, the goal is to replicate the workflow of Chapter 3 "Spatial cross-validation" but instead of creating the folds based on their geographical location, I created the folds based on two environmental parameters: Mean annual precipitation and mean annual temperature. Again, the following code shows how the clusters were created using the kmeans function (with different columns of the original data frame). Figure 5 shows a map displaying the distribution of the data points and their classification in the five create environmental clusters. Also, similar to Chapter 3, Figure 6 shows a densitiy plot for each of the five clusters.
 ```{r, code kmeans env cv, message=FALSE, warning=FALSE}
 # load prepared data
 dfs <- readRDS(here::here("./data/dfs.rds"))
@@ -97,23 +189,38 @@ clusters <- kmeans(
 dfs$cluster <- clusters$cluster
 ```
 
-```{r, map data points clustered env cv, echo=FALSE, message=FALSE, warning=FALSE, fig.cap= "Figure 3: Map showing the original data points (red) and their classification to the 5 created clusters (see legend)"}
+```{r, map data points clustered env cv, echo=FALSE, message=FALSE, warning=FALSE, fig.cap= "Figure 5: Map showing the original data points (red) and their classification to the 5 created clusters (see legend)"}
      
 map_datapoints_clustered_env <- readRDS(paste0(here::here(),"./data/map_datapoints_clustered_env.rds"))
 map_datapoints_clustered_env
       
 ```
 
-### 3.3 Distribution of leaf N by cluster
-Figure 4 shows the distribution of leaf N by cluster using density plots. The x and y axes are fixed to the same ranges, so that the five plots can be compared.
-
-```{r, density plots env cv, echo = FALSE, message=FALSE, warning=FALSE, fig.cap = "Figure 4: Leaf N density plots for every cluster"}
+```{r, density plots env cv, echo = FALSE, message=FALSE, warning=FALSE, fig.cap = "Figure 6: Leaf N density plots for every cluster"}
 density_plots_env <- readRDS(paste0(here::here(),"./data/density_plots_env.rds"))
 density_plots_env
 ```
 
+### 4.1 RSME and $R^2$ results
+The workflow in this chapter is equal to the workflow of Chapter 3, which is why I just refer to Chapter 3 for deeper explanations how the results were caluclated. Table 5 shows the RMSE and R-Squared results.
+
+```{r, results environmental cv, echo=FALSE, message=FALSE, warning=FALSE}
+results_environmental_cv <- readRDS(paste0(here::here("./data/results_environmental_cv.rds")))
+
+kable(results_spatial_cv, caption = "Table 5: RSME and $R^2$ across environmental cross-validation folds")
+```
+
+### 4.2 Comparing random, spatial and environmental cross-validation results
+Table 6 shows a summary of all results calculated in this exercise.
 
 
+```{r, summary results, echo=FALSE, message=FALSE, warning=FALSE}
+
+kable(results_foldwise)
+kable(results_spatial_cv)
+kable(results_environmental_cv)
+
+```
 
 
 ## 5 References

@@ -116,6 +116,8 @@ group_folds_train <- purrr::map(
   }
 )
 
+saveRDS(group_folds_train, (paste0(here::here(),"./data/group_folds_train.rds")))
+
 group_folds_test <- purrr::map(
   seq(length(unique(dfs$cluster))),
   ~ {
@@ -126,6 +128,8 @@ group_folds_test <- purrr::map(
       pull(idx)
   }
 )
+saveRDS(group_folds_test, (paste0(here::here(),"./data/group_folds_test.rds")))
+
 
 # apply function on each custom fold and collect validation results in a nice
 # data frame
@@ -137,6 +141,23 @@ out <- purrr::map2_dfr(group_folds_train,
 ) |>
   mutate(test_fold = 1:5)
 out
+# remove estimator
+out$rsq$.estimator <- NULL
+out$rmse$.estimator <- NULL
+
+out$rsq$.estimate <- round(out$rsq$.estimate, digits = 2)
+out$rmse$.estimate <- round(out$rmse$.estimate, digits = 2)
+
+out <- out[, c("test_fold", "rmse", "rsq")]
+
+out_df <- data.frame(
+  "Test_fold" = out$test_fold,
+  "RMSE" = out$rmse$.estimate,
+  "R-Squared" = out$rsq$.estimate
+)
+
+
+saveRDS(out_df, (paste0(here::here(),"./data/results_spatial_cv.rds")))
 
 
 ### 3.5 Random forest with clusters as folds -> Environmental cross-validation
@@ -177,13 +198,13 @@ map_clustered_env <- leaflet() |>
     radius = 0.1,
     opacity = 1,
     fillOpacity = 1,
-    group = "Data points spatially clustered"
+    group = "Data points environmentally clustered"
   ) |>
   addLayersControl(
     baseGroups = c("World Imagery","World Topo"),
     position = "topleft",
     options = layersControlOptions(collapsed = FALSE),
-    overlayGroups = c("Data points", "Data points spatially clustered")
+    overlayGroups = c("Data points", "Data points environmentally clustered")
   ) |>
   addLegend(
     colors = palcol(1:5),
@@ -242,4 +263,19 @@ out <- purrr::map2_dfr(group_folds_train,
   mutate(test_fold = 1:5)
 out
 
-saveRDS(out, here::here("./data/stats_clusters_env.rds"))
+# remove estimator
+out$rsq$.estimator <- NULL
+out$rmse$.estimator <- NULL
+
+out$rsq$.estimate <- round(out$rsq$.estimate, digits = 2)
+out$rmse$.estimate <- round(out$rmse$.estimate, digits = 2)
+
+out <- out[, c("test_fold", "rmse", "rsq")]
+
+out_df <- data.frame(
+  "Test_fold" = out$test_fold,
+  "RMSE" = out$rmse$.estimate,
+  "R-Squared" = out$rsq$.estimate
+)
+
+saveRDS(out_df, (paste0(here::here(),"./data/results_environmental_cv.rds")))
