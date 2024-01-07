@@ -90,7 +90,8 @@ saveRDS(results_foldwise, (paste0(here::here(),"./data/results_foldwise.rds")))
 prediction <- predict(mod, newdata = dfs_test)
 
 dfs_test$prediction <- prediction
-
+rmse <- yardstick::rmse(dfs_test, "leafN", "prediction")
+rsq <- yardstick::rsq(dfs_test, "leafN", "prediction")
 
 # import the eval_model function from chapter 9 of AGSI I
 source(here::here("./R/eval_model.R"))

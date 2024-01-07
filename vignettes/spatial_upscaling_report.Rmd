@@ -83,7 +83,34 @@ density_plots
 ### 3.5 Comparison random and spatial cross validation
 
 ## 4 Environmental cross-validation
+```{r, code kmeans env cv, message=FALSE, warning=FALSE}
+# load prepared data
+dfs <- readRDS(here::here("./data/dfs.rds"))
 
+# cluster the data
+clusters <- kmeans(
+  dfs[,5:6],    # column 2 contains lon and column contains lat data
+  centers = 5   # 5 clusters should be created
+)
+
+# add the create clusters to the original data frame
+dfs$cluster <- clusters$cluster
+```
+
+```{r, map data points clustered env cv, echo=FALSE, message=FALSE, warning=FALSE, fig.cap= "Figure 3: Map showing the original data points (red) and their classification to the 5 created clusters (see legend)"}
+     
+map_datapoints_clustered_env <- readRDS(paste0(here::here(),"./data/map_datapoints_clustered_env.rds"))
+map_datapoints_clustered_env
+      
+```
+
+### 3.3 Distribution of leaf N by cluster
+Figure 4 shows the distribution of leaf N by cluster using density plots. The x and y axes are fixed to the same ranges, so that the five plots can be compared.
+
+```{r, density plots env cv, echo = FALSE, message=FALSE, warning=FALSE, fig.cap = "Figure 4: Leaf N density plots for every cluster"}
+density_plots_env <- readRDS(paste0(here::here(),"./data/density_plots_env.rds"))
+density_plots_env
+```
 
 
 
