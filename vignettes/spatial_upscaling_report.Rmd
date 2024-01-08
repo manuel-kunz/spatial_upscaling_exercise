@@ -102,7 +102,7 @@ dfs$cluster <- clusters$cluster
 ```
 
 ```{r, map data points clustered, echo=FALSE, message=FALSE, warning=FALSE, fig.cap= "Figure 3: Map showing the original data points (red) and their classification to the 5 created clusters (see legend)"}
-     
+library(leaflet)  
 map_datapoints_clustered <- readRDS(here::here("./data/map_datapoints_clustered.rds"))
 map_datapoints_clustered
       
