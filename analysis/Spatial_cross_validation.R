@@ -31,7 +31,7 @@ map_datapoints <- leaflet() |>
     overlayGroups = c("Data points")
   )
 
-saveRDS(map_datapoints, (paste0(here::here(),"./data/map_datapoints.rds")))
+saveRDS(map_datapoints, (here::here("./data/map_datapoints.rds")))
 
 ### 3.2 Kmeans clusters
 # cluster the data
@@ -86,7 +86,7 @@ map_clustered <- leaflet() |>
     labels = c(1, 2, 3, 4, 5)
   )
 
-saveRDS(map_clustered, (paste0(here::here(),"./data/map_datapoints_clustered.rds")))
+saveRDS(map_clustered, (here::here("./data/map_datapoints_clustered.rds")))
 
 ### 3.3 Density plots
 # create density plots to show the leaf N values of the 5 clusters
@@ -98,7 +98,7 @@ density_plots <- ggplot(dfs, aes (x = leafN, fill = factor(cluster))) +
   labs(title = "Leaf N density plot for each cluster", x = "Leaf N values", y = "Density")+
   guides(fill = guide_legend(title = "Cluster"))
 
-saveRDS(density_plots, (paste0(here::here(),"./data/density_plots.rds")))
+saveRDS(density_plots, (here::here("./data/density_plots.rds")))
 
 
 ### 3.4 Random forest with clusters as folds -> Spatial cross-validation
@@ -116,7 +116,7 @@ group_folds_train <- purrr::map(
   }
 )
 
-saveRDS(group_folds_train, (paste0(here::here(),"./data/group_folds_train.rds")))
+saveRDS(group_folds_train, (here::here("./data/group_folds_train.rds")))
 
 group_folds_test <- purrr::map(
   seq(length(unique(dfs$cluster))),
@@ -128,7 +128,7 @@ group_folds_test <- purrr::map(
       pull(idx)
   }
 )
-saveRDS(group_folds_test, (paste0(here::here(),"./data/group_folds_test.rds")))
+saveRDS(group_folds_test, (here::here("./data/group_folds_test.rds")))
 
 
 # apply function on each custom fold and collect validation results in a nice
@@ -157,7 +157,7 @@ out_df <- data.frame(
 )
 
 
-saveRDS(out_df, (paste0(here::here(),"./data/results_spatial_cv.rds")))
+saveRDS(out_df, (here::here("./data/results_spatial_cv.rds")))
 
 
 ### 3.5 Random forest with clusters as folds -> Environmental cross-validation
@@ -214,7 +214,7 @@ map_clustered_env <- leaflet() |>
     labels = c(1, 2, 3, 4, 5)
   )
 
-saveRDS(map_clustered_env, (paste0(here::here(),"./data/map_datapoints_clustered_env.rds")))
+saveRDS(map_clustered_env, (here::here("./data/map_datapoints_clustered_env.rds")))
 
 ### 3.3 Density plots
 # create density plots to show the leaf N values of the 5 clusters
@@ -226,7 +226,7 @@ density_plots <- ggplot(dfs, aes (x = leafN, fill = factor(cluster_env))) +
   labs(title = "Leaf N density plot for each cluster", x = "Leaf N values", y = "Density")+
   guides(fill = guide_legend(title = "Cluster"))
 
-saveRDS(density_plots, (paste0(here::here(),"./data/density_plots_env.rds")))
+saveRDS(density_plots, (here::here("./data/density_plots_env.rds")))
 
 
 # create folds based on clusters assuming 'dfs' contains the data and a column called 'cluster' containing the
@@ -279,4 +279,4 @@ out_df <- data.frame(
   "R-Squared" = out$rsq$.estimate
 )
 
-saveRDS(out_df, (paste0(here::here(),"./data/results_environmental_cv.rds")))
+saveRDS(out_df, (here::here("./data/results_environmental_cv.rds")))

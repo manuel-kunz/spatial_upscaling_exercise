@@ -28,8 +28,8 @@ split <- rsample::initial_split(dfs, prop = 0.7)
 dfs_train <- rsample::training(split)
 dfs_test <- rsample::testing(split)
 
-saveRDS(dfs_train, (paste0(here::here(),"./data/dfs_train.rds")))
-saveRDS(dfs_test, (paste0(here::here(),"./data/dfs_test.rds")))
+saveRDS(dfs_train, (here::here("./data/dfs_train.rds")))
+saveRDS(dfs_test, (here::here("./data/dfs_test.rds")))
 
 # Check if data split worked
 n_tot <- nrow(dfs_train) + nrow(dfs_test)
@@ -77,7 +77,7 @@ results_foldwise$MAE <- NULL
 
 # reorder the columns
 results_foldwise <- results_foldwise[, c("Resample", "RMSE", "Rsquared")]
-saveRDS(results_foldwise, (paste0(here::here(),"./data/results_foldwise.rds")))
+saveRDS(results_foldwise, (here::here("./data/results_foldwise.rds")))
 
 prediction <- predict(mod, newdata = dfs_test)
 
@@ -89,4 +89,4 @@ rsq <- yardstick::rsq(dfs_test, "leafN", "prediction")
 source(here::here("./R/eval_model.R"))
 
 plots_cv_results <- eval_model(mod = mod, df_train = dfs_train, df_test = dfs_test)
-saveRDS(plots_cv_results, (paste0(here::here(),"./data/plots_cv_results.rds")))
+saveRDS(plots_cv_results, (here::here("./data/plots_cv_results.rds")))
