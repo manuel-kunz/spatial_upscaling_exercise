@@ -76,13 +76,25 @@ plot_random_cv
 ### 3.1 Observations regarding the locations of the data points
 Figure 2 shows the spatial distribution of the data points. It is clearly visible, that Europe is the region with the highest data point density, while there is only 1 data point on the African continent. For spatial upscaling, this is challenging because we can only assume that the relationship between predictors and the target variable in areas without data points is similar to the areas where data is available. 
 ```{r, map data points, echo=FALSE, message=FALSE, warning=FALSE, fig.cap= "Figure 2: Map showing the spatial distribution of the original data points (red)"}
-map_datapoints <- readRDS(here::here("./data/map_datapoints.rds"))
-map_datapoints
+library(leaflet)
+leaflet() |>
+  addProviderTiles(providers$Esri.WorldImagery, group = "World Imagery") |>
+  addProviderTiles(providers$Esri.WorldTopoMap, group = "World Topo") |>
+  addCircleMarkers(
+    data = dfs,
+    lng = ~lon,
+    lat = ~lat,
+    color = "red",
+    radius = 0.2,
+    group = "Data points"
+  ) |>
+  addLayersControl(
+    baseGroups = c("World Imagery","World Topo"),
+    position = "topleft",
+    options = layersControlOptions(collapsed = FALSE),
+    overlayGroups = c("Data points")
+  )
 ```
-
-
-
-
 
 ### 3.2 Performing a spatial cross-validation
 To perform a spatial cross-validation, I divided the data points used in Chapter 3.1 into 5 groups based on their location (lat and lon coordinates). This was done using the kmeans function from the R {stats} package.
@@ -102,9 +114,47 @@ dfs$cluster <- clusters$cluster
 ```
 
 ```{r, map data points clustered, echo=FALSE, message=FALSE, warning=FALSE, fig.cap= "Figure 3: Map showing the original data points (red) and their classification to the 5 created clusters (see legend)"}
-library(leaflet)  
-map_datapoints_clustered <- readRDS(here::here("./data/map_datapoints_clustered.rds"))
-map_datapoints_clustered
+palcol <- colorFactor(
+  c('#8dd3c7','#ffffb3','#bebada','#fb8072','#80b1d3'),
+  domain = 1:5,
+  na.color = "transparent"
+  )
+
+leaflet() |>
+  addProviderTiles(providers$Esri.WorldImagery, group = "World Imagery") |>
+  addProviderTiles(providers$Esri.WorldTopoMap, group = "World Topo") |>
+  addCircleMarkers(
+    data = dfs,
+    lng = ~lon,
+    lat = ~lat,
+    color = "red",
+    radius = 0.1,
+    opacity = 1,
+    fillOpacity = 1,
+    group = "Data points"
+  ) |>
+  addCircleMarkers(
+    data = dfs,
+    lng = ~lon,
+    lat = ~lat,
+    color = ~palcol(cluster),
+    radius = 0.1,
+    opacity = 1,
+    fillOpacity = 1,
+    group = "Data points spatially clustered"
+  ) |>
+  addLayersControl(
+    baseGroups = c("World Imagery","World Topo"),
+    position = "topleft",
+    options = layersControlOptions(collapsed = FALSE),
+    overlayGroups = c("Data points", "Data points spatially clustered")
+  ) |>
+  addLegend(
+    colors = palcol(1:5),
+    values = c(1, 2, 3, 4, 5),
+    title = "cluster",
+    labels = c(1, 2, 3, 4, 5)
+  )
       
 ```
 
@@ -231,9 +281,42 @@ dfs$cluster <- clusters$cluster
 ```
 
 ```{r, map data points clustered env cv, echo=FALSE, message=FALSE, warning=FALSE, fig.cap= "Figure 5: Map showing the original data points (red) and their classification to the 5 created clusters (see legend)"}
-     
-map_datapoints_clustered_env <- readRDS(here::here("./data/map_datapoints_clustered_env.rds"))
-map_datapoints_clustered_env
+leaflet() |>
+  addProviderTiles(providers$Esri.WorldImagery, group = "World Imagery") |>
+  addProviderTiles(providers$Esri.WorldTopoMap, group = "World Topo") |>
+  addCircleMarkers(
+    data = dfs,
+    lng = ~lon,
+    lat = ~lat,
+    color = "red",
+    radius = 0.1,
+    opacity = 1,
+    fillOpacity = 1,
+    group = "Data points"
+  ) |>
+  addCircleMarkers(
+    data = dfs,
+    lng = ~lon,
+    lat = ~lat,
+    color = ~palcol(cluster),
+    radius = 0.1,
+    opacity = 1,
+    fillOpacity = 1,
+    group = "Data points environmentally clustered"
+  ) |>
+  addLayersControl(
+    baseGroups = c("World Imagery","World Topo"),
+    position = "topleft",
+    options = layersControlOptions(collapsed = FALSE),
+    overlayGroups = c("Data points", "Data points environmentally clustered")
+  ) |>
+  addLegend(
+    colors = palcol(1:5),
+    values = c(1, 2, 3, 4, 5),
+    title = "cluster",
+    labels = c(1, 2, 3, 4, 5)
+  )
+
       
 ```
 
