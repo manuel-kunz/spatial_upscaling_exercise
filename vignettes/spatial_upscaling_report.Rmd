@@ -1,18 +1,17 @@
 ---
 title: "Spatial upscaling Exercise - Final Report"
 author: "Manuel Kunz"
-date: "2024-01-02"
+date: "2024-01-08"
 bibliography: "references.bib"
 output: html_document
-codefolding: hide
 ---
 
 ## 1 Literature
 ### 1.1 Difference between a random and spatial cross-validation
-First, to answer this question, it makes sense to look the following defintion of "cross-validation" from @boehmke2020: "k-fold cross-validation (aka k-fold CV) is a resampling method that randomly divides the training data into k groups (aka folds) of approximately equal size" (Boehmke & Greenwell, 2020: 23). As shown with this quote, to perform a cross-validation, the training data is split into a defined number of folds Now, there are multiple ways to perform such a split. In a random cross-validation, the data is split randomly into folds. In contrast, a spatial cross-validation takes the geographical location of the data into account and splits the data into folds based on their location.
+First, to answer this question, it makes sense to look the following defintion of "cross-validation" from @boehmke2020: "k-fold cross-validation (aka k-fold CV) is a resampling method that randomly divides the training data into k groups (aka folds) of approximately equal size" (Boehmke & Greenwell, 2020: 23). As shown with this quote, to perform a cross-validation, the training data is split into a defined number of folds. Now, there are multiple ways to perform such a split. In a random cross-validation, the data is split randomly into folds. In contrast, a spatial cross-validation takes the geographical location of the data into account and splits the data into folds based on their location.
 
 ### 1.2 Alternative to geographical distance
-In this exercise, we are trying to predict the Nitrogen leaf content. I can imagine that the Nitrogen content of a leaf is influenced by climate. If we think of the "classical climate zones", they strongly differ from North to South, but only little from West to East. But if we calculate the geographical distance in Euclidian space, it does not matter if the distance is mainly zonal or mainly meridional. Simply speaking, if two points are located on the equator 10'000 kilometers apart, the geographical distance (10'000 km) would be the same as for it one of the points would be located close to the North Pole. Therefore I think it would be interesting to include only the latitudinal distances because we can expect a similar climate.
+In this exercise, we are trying to predict the Nitrogen leaf content. I can imagine that the Nitrogen content of a leaf is influenced by climate. If we think of the "classical climate zones", they strongly differ from North to South, but only little from West to East. But if we calculate the geographical distance in Euclidian space, it does not matter if the distance is mainly zonal or mainly meridional. Simply speaking, if two points are located on the equator 10'000 kilometers apart, the geographical distance (10'000 km) would be the same as for if one of the points would be located close to the North Pole. Therefore, I think it would be interesting to include only the latitudinal distances because we can expect a similar climate for locations with a similar latitudinal locations.
 
 
 
@@ -98,7 +97,7 @@ leaflet() |>
 ```
 
 ### 3.2 Performing a spatial cross-validation
-To perform a spatial cross-validation, I divided the data points used in Chapter 3.1 into 5 groups based on their location (lat and lon coordinates). This was done using the kmeans function from the R {stats} package.
+To perform a spatial cross-validation, I divided the data points used in Chapter 3.1 into 5 groups based on their location (lat and lon coordinates). This was done using the kmeans function from the R {stats} package. Figure 3 shows a map with the same data points as in Figure 2 but here, they are divided into 5 spatial clusters.
 
 ```{r, code kmeans, message=FALSE, warning=FALSE}
 # load prepared data
@@ -110,11 +109,11 @@ clusters <- kmeans(
   centers = 5   # 5 clusters should be created
 )
 
-# add the create clusters to the original data frame
-dfs$cluster <- clusters$cluster
 ```
 
 ```{r, map data points clustered, echo=FALSE, message=FALSE, warning=FALSE, fig.cap= "Figure 3: Map showing the original data points (red) and their classification to the 5 created clusters (see legend)"}
+dfs <- readRDS(here::here("./data/dfs.rds"))
+
 palcol <- colorFactor(
   c('#8dd3c7','#ffffb3','#bebada','#fb8072','#80b1d3'),
   domain = 1:5,
@@ -168,8 +167,8 @@ density_plots
 ```
 
 
-### 3.4 RSME and $R^2$ results
-Now, I used the geographical clusters generated with the kmeans function in Chapter 3.2 to split the data into five folds. This was done using the following code provides in the exercise description
+### 3.4 RSME and R-squared results
+Now, I used the geographical clusters generated with the kmeans function in Chapter 3.2 to split the data into five folds. This was done using the following code provides in the exercise description.
 
 ```{r, fold creation, message=FALSE, warning=FALSE}
 library(dplyr)
@@ -255,7 +254,7 @@ kable(results_spatial_cv, caption = "Table 3: RSME and R-squared across spatial 
 
 
 ### 3.5 Comparison random and spatial cross validation
-Table 4 shows the results from the random and the spatial cross-validation
+Table 4 shows the results from the random and the spatial cross-validation. Comparing the two cross-validation strategies shows, that both the RMSE and R-squared results are smaller in the spatial cross-validation. This is especially true for the cluster 2, 3 and also for cluster 4. Looking at Figure 3 and Table 2 shows that these clusters contain the least data points. This could be the reason why the results are lower compared to the other clusters.
 
 
 ```{r, random and spatial cv, echo=FALSE, message=FALSE, warning=FALSE}
@@ -277,11 +276,10 @@ clusters <- kmeans(
   centers = 5   # 5 clusters should be created
 )
 
-# add the create clusters to the original data frame
-dfs$cluster <- clusters$cluster
 ```
 
 ```{r, map data points clustered env cv, echo=FALSE, message=FALSE, warning=FALSE, fig.cap= "Figure 5: Map showing the original data points (red) and their classification to the 5 created clusters (see legend)"}
+dfs <- readRDS(here::here("./data/dfs.rds"))
 leaflet() |>
   addProviderTiles(providers$Esri.WorldImagery, group = "World Imagery") |>
   addProviderTiles(providers$Esri.WorldTopoMap, group = "World Topo") |>
@@ -299,7 +297,7 @@ leaflet() |>
     data = dfs,
     lng = ~lon,
     lat = ~lat,
-    color = ~palcol(cluster),
+    color = ~palcol(cluster_env),
     radius = 0.1,
     opacity = 1,
     fillOpacity = 1,
@@ -326,17 +324,17 @@ density_plots_env <- readRDS(here::here("./data/density_plots_env.rds"))
 density_plots_env
 ```
 
-### 4.1 RSME and $R^2$ results
-The workflow in this chapter is equal to the workflow of Chapter 3, which is why I just refer to Chapter 3 for deeper explanations how the results were caluclated. Table 5 shows the RMSE and R-Squared results.
+### 4.1 RSME and R-squared results
+The workflow in this chapter is equal to the workflow of Chapter 3, which is why I just refer to Chapter 3 for deeper explanations how the results were caluclated. Table 5 shows the RMSE and R-squared results.
 
 ```{r, results environmental cv, echo=FALSE, message=FALSE, warning=FALSE}
 results_environmental_cv <- readRDS(here::here("./data/results_environmental_cv.rds"))
 
-kable(results_spatial_cv, caption = "Table 5: RSME and R-squared across environmental cross-validation folds")
+kable(results_environmental_cv, caption = "Table 5: RSME and R-squared across environmental cross-validation folds")
 ```
 
 ### 4.2 Comparing random, spatial and environmental cross-validation results
-Table 6 shows a summary of all results calculated in this exercise.
+Table 6 shows a summary of all results calculated in this exercise. Comparisons between random cross-validation and spatial cross-validation are outlined in Chapter 3.5. Here, the results from the environmental cross-validation are added. It is observable, that the RSME and R-squared results are still lower compared to the random cross-validation, but the differences between the folds are not as large as for the spatial cross-validation. Compared to the spatial cross-validation, the environmental cross-validation shows slightly larger RMSE and R-squared values.
 
 
 ```{r, summary results, echo=FALSE, message=FALSE, warning=FALSE}

@@ -168,8 +168,9 @@ clusters_env <- kmeans(
   centers = 5
 )
 
-dfs$cluster <- clusters_env$cluster
+dfs$cluster_env <- clusters_env$cluster
 
+saveRDS(dfs, here::here("./data/dfs.rds"))
 
 palcol <- colorFactor(
   c('#8dd3c7','#ffffb3','#bebada','#fb8072','#80b1d3'),
@@ -194,7 +195,7 @@ map_clustered_env <- leaflet() |>
     data = dfs,
     lng = ~lon,
     lat = ~lat,
-    color = ~palcol(cluster),
+    color = ~palcol(cluster_env),
     radius = 0.1,
     opacity = 1,
     fillOpacity = 1,
@@ -217,9 +218,9 @@ saveRDS(map_clustered_env, (paste0(here::here(),"./data/map_datapoints_clustered
 
 ### 3.3 Density plots
 # create density plots to show the leaf N values of the 5 clusters
-density_plots <- ggplot(dfs, aes (x = leafN, fill = factor(cluster))) +
+density_plots <- ggplot(dfs, aes (x = leafN, fill = factor(cluster_env))) +
   geom_density(alpha = 0.7) +
-  facet_wrap(~cluster, scales = "fixed") +
+  facet_wrap(~cluster_env, scales = "fixed") +
   scale_fill_manual(values = c('#8dd3c7','#ffffb3','#bebada','#fb8072','#80b1d3')) +
   theme_gray() +
   labs(title = "Leaf N density plot for each cluster", x = "Leaf N values", y = "Density")+
@@ -231,23 +232,23 @@ saveRDS(density_plots, (paste0(here::here(),"./data/density_plots_env.rds")))
 # create folds based on clusters assuming 'dfs' contains the data and a column called 'cluster' containing the
 # result of the k-means clustering -> code taken from exercise
 group_folds_train <- purrr::map(
-  seq(length(unique(dfs$cluster))),
+  seq(length(unique(dfs$cluster_env))),
   ~ {
     dfs |>
-      select(cluster) |>
+      select(cluster_env) |>
       mutate(idx = 1:n()) |>
-      filter(cluster != .) |>
+      filter(cluster_env != .) |>
       pull(idx)
   }
 )
 
 group_folds_test <- purrr::map(
-  seq(length(unique(dfs$cluster))),
+  seq(length(unique(dfs$cluster_env))),
   ~ {
     dfs |>
-      select(cluster) |>
+      select(cluster_env) |>
       mutate(idx = 1:n()) |>
-      filter(cluster == .) |>
+      filter(cluster_env == .) |>
       pull(idx)
   }
 )
