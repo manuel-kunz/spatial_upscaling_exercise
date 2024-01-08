@@ -24,6 +24,7 @@ library(here)
 library(tidyr)
 library(recipes)
 library(caret)
+library(dplyr)
 
 # load data
 dfs <- readRDS(here::here("./data/dfs.rds"))
@@ -248,7 +249,7 @@ Ultimately, the following results were calculated (Table 3):
 ```{r, results spatial cv, echo=FALSE, message=FALSE, warning=FALSE}
 results_spatial_cv <- readRDS(here::here("./data/results_spatial_cv.rds"))
 
-kable(results_spatial_cv, caption = "Table 3: RSME and $R^2$ across spatial cross-validation folds")
+kable(results_spatial_cv, caption = "Table 3: RSME and R-squared across spatial cross-validation folds")
 ```
 
 
@@ -261,7 +262,7 @@ Table 4 shows the results from the random and the spatial cross-validation
 combined_results <- cbind(results_foldwise, results_spatial_cv)
 colnames(combined_results) <- c("Resample random cv", "RMSE random cv", "Rsquared random cv", "Test fold spatial cv", "RMSE spatial cv", "Rsquared spatial cv")
 
-kable(combined_results, caption = "Table 4: Comparison of RSME and $R^2$ results across random and spatial cross-validation folds")
+kable(combined_results, caption = "Table 4: Comparison of RSME and R-squared results across random and spatial cross-validation folds")
 ```
 
 ## 4 Environmental cross-validation
@@ -331,7 +332,7 @@ The workflow in this chapter is equal to the workflow of Chapter 3, which is why
 ```{r, results environmental cv, echo=FALSE, message=FALSE, warning=FALSE}
 results_environmental_cv <- readRDS(here::here("./data/results_environmental_cv.rds"))
 
-kable(results_spatial_cv, caption = "Table 5: RSME and $R^2$ across environmental cross-validation folds")
+kable(results_spatial_cv, caption = "Table 5: RSME and R-squared across environmental cross-validation folds")
 ```
 
 ### 4.2 Comparing random, spatial and environmental cross-validation results
@@ -339,11 +340,10 @@ Table 6 shows a summary of all results calculated in this exercise.
 
 
 ```{r, summary results, echo=FALSE, message=FALSE, warning=FALSE}
+total_results <- cbind(results_foldwise, results_spatial_cv, results_environmental_cv)
 
-kable(results_foldwise)
-kable(results_spatial_cv)
-kable(results_environmental_cv)
-
+colnames(total_results) <- (c("Folds random cv", "RMSE random cv", "R-squared random cv", "Folds spatial cv", "RMSE spatial cv", "R-squared spatial cv", "Folds environmental cv", "RSME environmental cv", "R-squared environmental cv"))
+kable(total_results, caption = "Table 6: RSME and R-squared results for all three types of cross-validation strategies")
 ```
 
 
